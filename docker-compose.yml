@@ -1,0 +1,28 @@
+version: '3'
+services:
+  csi:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    working_dir: /home
+    volumes:
+      - ./dataset:/dataset
+      - ./cache:/cache
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
+    environment:
+       - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.5.1
+    ports:
+      - "5601:5601"
+volumes:
+  elasticsearch:
