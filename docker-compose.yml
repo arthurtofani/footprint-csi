@@ -6,6 +6,8 @@ services:
       dockerfile: ./Dockerfile
     working_dir: /home
     volumes:
+      - ./home:/home
+      - ./footprint:/footprint
       - ./dataset:/dataset
       - ./cache:/cache
   elasticsearch:

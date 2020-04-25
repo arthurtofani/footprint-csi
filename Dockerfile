@@ -27,8 +27,3 @@ RUN pip3 install matrixprofile-ts
 RUN pip3 install git+https://github.com/bmcfee/crema.git@master
 RUN pip3 install hashedindex
 RUN pip3 install elasticsearch
-
-RUN git clone https://github.com/arthurtofani/footprint.git footprint-repo
-RUN ln -s footprint-repo/footprint footprint
-
-#CMD ["jupyter", "lab", "--allow-root"]
