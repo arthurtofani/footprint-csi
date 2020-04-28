@@ -120,7 +120,7 @@ p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_cens_12', ocmi.ocm
 
 #p.use_tokenizer('magic1', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
 #p.use_tokenizer('magic1', magic_tokenizer('chroma_cens_12', min_hash_fns=20, shingle_size=1))
-p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=15, shingle_size=1)) # MAP: 0.96?
+p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2)) # MAP: 0.96?
 
 connect_to_elasticsearch(p)
 p.client.set_scope('csi', 'magic1', 'tokens_by_spaces')
@@ -144,3 +144,25 @@ print(df2.sum())
 
 #      import code; code.interact(local=dict(globals(), **locals()))
 
+
+#p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=15, shingle_size=1))
+# ==== Results ===
+# Mean Average Precision (MAP)                 0.909113
+# Mean number of covers in top 10              6.736549
+# Mean rank of first correct cover (MRR)       1.000000
+# Total candidates                           539.000000
+# Total cliques                               49.000000
+# Total covers in top 10                    3631.000000
+# Total queries                              539.000000
+# dtype: float64
+# ==== Total correct covers at rank positions ===
+# 1     214
+# 2     236
+# 3     286
+# 4     319
+# 5     366
+# 6     370
+# 7     420
+# 8     422
+# 9     459
+# 10    539
