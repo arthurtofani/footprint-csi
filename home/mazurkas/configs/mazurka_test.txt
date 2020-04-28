@@ -1,0 +1,3 @@
+/dataset/mazurkas/mazurka06-3/pid9111-03.mp3
+/dataset/mazurkas/mazurka06-3/pid9114-27.mp3
+/dataset/mazurkas/mazurka06-3/pid9174-03.mp3

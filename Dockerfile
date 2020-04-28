@@ -22,6 +22,7 @@ RUN LLVM_CONFIG=/usr/bin/llvm-config-8 pip3 install enum34 llvmlite numba
 RUN pip3 install librosa==0.7.2
 RUN pip3 install deepdish psutil
 RUN pip3 install cython
+RUN pip3 install datasketch
 RUN pip3 install madmom essentia
 RUN pip3 install matrixprofile-ts
 RUN pip3 install git+https://github.com/bmcfee/crema.git@master

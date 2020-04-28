@@ -12,65 +12,6 @@ import logging
 import numpy as np
 import librosa
 
-entries_path = abs_path('configs/mazurkas_49x11.txt')
-queries_path = abs_path('configs/mazurkas_49x11.txt')
-expect_path = abs_path('configs/mazurkas_cliques.csv')
-#queries_path = abs_path('fixtures/test/queries_small.txt')
-
-#generate_clique_map(entries_path, expect_path)
-#read_clique_map(filename)
-
-p = Project(cache=True, cache_folder='/cache')
-p.process_feature('beat_chroma_cens', beat_sync_chroma_cens)
-p.process_feature('chroma_cens', feat_chroma_cens)
-p.process_feature('beat_chroma_ocmi_4', beat_chroma_ocmi_4)
-#p.process_feature('beat_chroma_ocmi_5', beat_chroma_ocmi_5)
-#p.process_feature('beat_chroma_ocmi_3', beat_chroma_ocmi_3)
-#p.process_feature('beat_chroma_docmi_3', beat_chroma_docmi_3)
-#p.process_feature('beat_chroma_docmi_4', beat_chroma_docmi_4)
-#p.process_feature('chroma_ocmi_4', chroma_ocmi_4)
-#p.process_feature('chroma_ocmi_3', chroma_ocmi_3)
-#p.process_feature('bbeat_chroma_ocmi_4', proc_ocmi_feature('beat_chroma_cens', ocmi.ocmi, reshape=(None, 4)))
-#p.process_feature('bbeat_chroma_ocmi_norm_4', proc_ocmi_feature('beat_chroma_cens', ocmi.ocmi_norm, reshape=(None, 4)))
-#p.process_feature('bbeat_chroma_ocmi_norm_4', proc_ocmi_feature('beat_chroma_cens', ocmi.ocmi_norm, reshape=(None, 4)))
-#p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('chroma_cens', ocmi.ocmi_norm, reshape=(None, 4)))
-
-#p.use_tokenizer('chroma_naive', naive_tokenizer_for_beat_chroma)
-#p.use_tokenizer('chroma_naive2', naive_tokenizer_for_chroma)
-
-#p.use_tokenizer('ocmi_tokenizer_beat_chroma_ocmi_4', ocmi_tokenizer_beat_chroma_ocmi_4)
-#p.use_tokenizer('ocmi_tokenizer_beat_chroma_ocmi_5', ocmi_tokenizer_beat_chroma_ocmi_5)
-#p.use_tokenizer('ocmi_tokenizer_beat_chroma_ocmi_3', ocmi_tokenizer_beat_chroma_ocmi_3)
-#p.use_tokenizer('ocmi_tokenizer_beat_chroma_docmi_3', ocmi_tokenizer_beat_chroma_docmi_3)
-#p.use_tokenizer('ocmi_tokenizer_beat_chroma_docmi_4', ocmi_tokenizer_beat_chroma_docmi_4)
-#p.use_tokenizer('ocmi_tokenizer_chroma_ocmi_4', ocmi_tokenizer_chroma_ocmi_4)
-#p.use_tokenizer('ocmi_tokenizer_chroma_ocmi_3', ocmi_tokenizer_chroma_ocmi_3)
-
-#p.use_tokenizer('magic1', magic_tokenizer('bchroma_ocmi_norm_4', min_hash_fns=15, shingle_size=10)) # MAP=0.39
-p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_ocmi_4', min_hash_fns=10, shingle_size=1))
-
-connect_to_elasticsearch(p)
-p.client.set_scope('csi', 'magic1', 'tokens_by_spaces')
-#p.add('/dataset/YTCdataset/letitbe/test.mp3')
-#import code; code.interact(local=dict(globals(), **locals()))
-
-evaluator = evaluators.CSI(p)
-print('building')
-evaluator.build(entries_path, exclude_path=queries_path)
-print('matching')
-evaluator.match(queries_path)
-
-
-print("\n\n\n==== Results ===")
-df1, df2 = evaluator.evaluate(expect_path)
-print(df1.sum())
-
-print("==== Total correct covers at rank positions ===")
-print(df2.sum())
-
-#r = compare_results(result, expect_path)
-self.assertEqual(1, 1)
-
 
 def generate_clique_map(entries_path, filename):
   f = open(entries_path, 'r', encoding='utf-8')
@@ -102,6 +43,7 @@ def abs_path(path):
 def magic_tokenizer(feature_name, min_hash_fns=10, shingle_size=3):
   def tokenize_method(audio):
     feature = audio.features[feature_name]
+    #proc_ocmi_feature ...
     return tokenizers.magic_hash(feature, min_hash_fns=min_hash_fns, shingle_size=shingle_size)
   return tokenize_method
 
@@ -112,70 +54,17 @@ def proc_ocmi_feature(feature_name, method, reshape=(None, None)):
     return tokenizers.reshape(f2, reshape[0], reshape[1])
   return feat_method
 
-
-
-def naive_tokenizer_for_beat_chroma(audio):
-  return tokenizers.naive_tokenizer(audio.features['beat_chroma_cens'], pace=30)
-
-def naive_tokenizer_for_chroma(audio):
-  return tokenizers.naive_tokenizer(audio.features['chroma_cens'], pace=30)
-
-def ocmi_tokenizer_chroma_ocmi_3(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return tokenizers.naive_tokenizer(audio.features['chroma_ocmi_3'], pace=30)
-
-def ocmi_tokenizer_chroma_ocmi_4(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return tokenizers.naive_tokenizer(audio.features['chroma_ocmi_4'], pace=30)
-
-def ocmi_tokenizer_beat_chroma_ocmi_4(audio):
-  #return tokenizers.naive_tokenizer(audio.features['beat_chroma_ocmi_4'], pace=30)
-  return ocmi.tokenize(audio.features['beat_chroma_ocmi_4'])
-
-def ocmi_tokenizer_beat_chroma_ocmi_3(audio):
-  return tokenizers.naive_tokenizer(audio.features['beat_chroma_ocmi_3'], pace=30)
-
-def ocmi_tokenizer_beat_chroma_ocmi_5(audio):
-  return tokenizers.naive_tokenizer(audio.features['beat_chroma_ocmi_5'], pace=30)
-
-def ocmi_tokenizer_beat_chroma_docmi_3(audio):
-  return tokenizers.naive_tokenizer(audio.features['beat_chroma_docmi_3'], pace=30)
-
-def ocmi_tokenizer_beat_chroma_docmi_4(audio):
-  return tokenizers.naive_tokenizer(audio.features['beat_chroma_docmi_4'], pace=30)
-
 def feat_chroma_cens(audio):
   print('running chroma for ', audio.filename)
-  return librosa.feature.chroma_cens(audio.y, audio.sr)
+  return librosa.feature.chroma_cens(audio.y, audio.sr, hop_length=2**10)
 
-def chroma_ocmi_3(audio):
+def chroma_ocmi(audio):
   chroma = audio.features['chroma_cens']
-  return ocmi.calc_ocmi(chroma, 3)
+  return ocmi.ocmi(chroma)
 
-def chroma_ocmi_4(audio):
-  chroma = audio.features['chroma_cens']
-  return ocmi.calc_ocmi(chroma, 4)
-
-def beat_chroma_ocmi_4(audio):
+def beat_chroma_ocmi(audio):
   chroma = audio.features['beat_chroma_cens']
-  return ocmi.calc_ocmi(chroma, 4)
-
-def beat_chroma_ocmi_3(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return ocmi.calc_ocmi(chroma, 3)
-
-def beat_chroma_ocmi_5(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return ocmi.calc_ocmi(chroma, 5)
-
-def beat_chroma_docmi_3(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return ocmi.calc_docmi(chroma, 3)
-
-def beat_chroma_docmi_4(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return ocmi.calc_docmi(chroma, 4)
-
+  return ocmi.ocmi(chroma)
 
 def beat_sync_chroma_cens(audio):
   chroma =  librosa.feature.chroma_cens(audio.y, sr=audio.sr, hop_length=2**10)
@@ -209,8 +98,49 @@ def initial_settings():
     }
   }
 
-if __name__ == '__main__':
-  unittest.main()
+
+
+entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+#queries_path = abs_path('mazurkas/configs/mazurka_test.txt')
+expect_path = abs_path('mazurkas/configs/mazurka_cliques.csv')
+#queries_path = abs_path('fixtures/test/queries_small.txt')
+
+#generate_clique_map(entries_path, expect_path)
+#read_clique_map(filename)
+
+p = Project(cache=True, cache_folder='/cache')
+p.process_feature('beat_chroma_cens', beat_sync_chroma_cens)
+p.process_feature('chroma_censx', feat_chroma_cens)
+#p.process_feature('chroma_cens_12', feat_chroma_cens)
+p.process_feature('beat_chroma_ocmi', beat_chroma_ocmi)
+p.process_feature('chroma_ocmi', chroma_ocmi)
+#p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('beat_chroma_cens', ocmi.ocmi_norm, reshape=(0, 4)))
+p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_cens_12', ocmi.ocmi, reshape=(0, 4)))
+
+#p.use_tokenizer('magic1', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
+#p.use_tokenizer('magic1', magic_tokenizer('chroma_cens_12', min_hash_fns=20, shingle_size=1))
+p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=15, shingle_size=1)) # MAP: 0.96?
+
+connect_to_elasticsearch(p)
+p.client.set_scope('csi', 'magic1', 'tokens_by_spaces')
+#p.add('/dataset/YTCdataset/letitbe/test.mp3')
+#import code; code.interact(local=dict(globals(), **locals()))
+
+evaluator = evaluators.CSI(p)
+print('building')
+evaluator.build(entries_path)
+print('matching')
+evaluator.match(queries_path)
+
+
+print("\n\n\n==== Results ===")
+df1, df2 = evaluator.evaluate(expect_path)
+print(df1.sum())
+
+print("==== Total correct covers at rank positions ===")
+print(df2.sum())
+
 
 #      import code; code.interact(local=dict(globals(), **locals()))
-# python3 -m unittest test.eval_csi.TestEvalCSI.test_smoke
+
