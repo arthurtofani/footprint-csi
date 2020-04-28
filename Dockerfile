@@ -28,3 +28,4 @@ RUN pip3 install matrixprofile-ts
 RUN pip3 install git+https://github.com/bmcfee/crema.git@master
 RUN pip3 install hashedindex
 RUN pip3 install elasticsearch
+RUN pip3 install scipy crema
