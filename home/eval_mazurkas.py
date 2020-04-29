@@ -23,19 +23,6 @@ def generate_clique_map(entries_path, filename):
   f.close()
 
 
-def read_clique_map(filename):
-  f = open(filename, 'r', encoding='utf-8')
-  return list(csv.reader(f, delimiter='\t'))
-
-
-def compare_results(result, expectation_path):
-  file = open(expectation_path, 'r')
-  fil = file.read()
-  expected = dict([x.split('\t') for x in fil.split('\n')])
-  file.close()
-  comparisons = [expected[query]==found for query, found in result]
-  return sum(comparisons)/len(comparisons)
-
 def abs_path(path):
     dirname = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(dirname, path)
@@ -102,9 +89,10 @@ def initial_settings():
 
 entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
 queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
-#entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
-#queries_path = abs_path('mazurkas/configs/mazurka_test.txt')
 expect_path = abs_path('mazurkas/configs/mazurka_cliques.csv')
+#entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+#queries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+
 #queries_path = abs_path('fixtures/test/queries_small.txt')
 
 #generate_clique_map(entries_path, expect_path)
@@ -120,11 +108,13 @@ p.process_feature('chroma_ocmi', chroma_ocmi)
 p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_censx', ocmi.ocmi, reshape=(0, 4)))
 
 #p.use_tokenizer('magic1', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
-#p.use_tokenizer('magic1', magic_tokenizer('chroma_cens_12', min_hash_fns=20, shingle_size=1))
-p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=35, shingle_size=1))
+p.use_tokenizer('magic2', magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=2))
+p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=2))
+p.use_tokenizer('magic3', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
+p.use_tokenizer('magic4', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2))
 
 connect_to_elasticsearch(p)
-p.client.set_scope('csi', 'magic1', 'tokens_by_spaces')
+p.client.set_scope('csi', ['magic4'], 'tokens_by_spaces')
 #p.add('/dataset/YTCdataset/letitbe/test.mp3')
 #import code; code.interact(local=dict(globals(), **locals()))
 

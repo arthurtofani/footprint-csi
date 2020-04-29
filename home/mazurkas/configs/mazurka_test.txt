@@ -1,3 +1,5 @@
-/dataset/mazurkas/mazurka06-3/pid9111-03.mp3
-/dataset/mazurkas/mazurka06-3/pid9114-27.mp3
-/dataset/mazurkas/mazurka06-3/pid9174-03.mp3
+/dataset/mazurkas/mazurka30-2/pid9198g-19.mp3
+/dataset/mazurkas/mazurka67-1/pid9118b-19.mp3
+/dataset/mazurkas/mazurka07-2/pid9061-06.mp3
+/dataset/mazurkas/mazurka24-4/pid9056-13.mp3
+/dataset/mazurkas/mazurka17-2/pid9074f-11.mp3
