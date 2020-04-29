@@ -102,6 +102,7 @@ def initial_settings():
 
 entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
 queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+#entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
 #queries_path = abs_path('mazurkas/configs/mazurka_test.txt')
 expect_path = abs_path('mazurkas/configs/mazurka_cliques.csv')
 #queries_path = abs_path('fixtures/test/queries_small.txt')
@@ -116,11 +117,11 @@ p.process_feature('chroma_censx', feat_chroma_cens)
 p.process_feature('beat_chroma_ocmi', beat_chroma_ocmi)
 p.process_feature('chroma_ocmi', chroma_ocmi)
 #p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('beat_chroma_cens', ocmi.ocmi_norm, reshape=(0, 4)))
-p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_cens_12', ocmi.ocmi, reshape=(0, 4)))
+p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_censx', ocmi.ocmi, reshape=(0, 4)))
 
 #p.use_tokenizer('magic1', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
 #p.use_tokenizer('magic1', magic_tokenizer('chroma_cens_12', min_hash_fns=20, shingle_size=1))
-p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2)) # MAP: 0.96?
+p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=35, shingle_size=1))
 
 connect_to_elasticsearch(p)
 p.client.set_scope('csi', 'magic1', 'tokens_by_spaces')
@@ -135,7 +136,7 @@ evaluator.match(queries_path)
 
 
 print("\n\n\n==== Results ===")
-df1, df2 = evaluator.evaluate(expect_path)
+df1, df2 = evaluator.evaluate(expect_path, 'mazurkas/out.txt')
 print(df1.sum())
 
 print("==== Total correct covers at rank positions ===")
@@ -147,22 +148,22 @@ print(df2.sum())
 
 #p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=15, shingle_size=1))
 # ==== Results ===
-# Mean Average Precision (MAP)                 0.909113
-# Mean number of covers in top 10              6.736549
-# Mean rank of first correct cover (MRR)       1.000000
+# Mean Average Precision (MAP)                 0.515218
+# Mean number of covers in top 10              5.736549
+# Mean rank of first correct cover (MRR)       2.129870
 # Total candidates                           539.000000
 # Total cliques                               49.000000
-# Total covers in top 10                    3631.000000
+# Total covers in top 10                    3248.000000
 # Total queries                              539.000000
 # dtype: float64
 # ==== Total correct covers at rank positions ===
-# 1     214
-# 2     236
-# 3     286
-# 4     319
+# 1     459
+# 2     422
+# 3     420
+# 4     370
 # 5     366
-# 6     370
-# 7     420
-# 8     422
-# 9     459
-# 10    539
+# 6     319
+# 7     286
+# 8     236
+# 9     214
+# 10    156
