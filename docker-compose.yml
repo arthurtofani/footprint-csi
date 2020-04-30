@@ -1,6 +1,7 @@
 version: '3'
 services:
   csi:
+    user: "${UID}:${GID}"
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -11,6 +12,7 @@ services:
       - ./dataset:/dataset
       - ./cache:/cache
   elasticsearch:
+    user: "${UID}:${GID}"
     image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
     environment:
        - discovery.type=single-node
@@ -23,6 +25,7 @@ services:
     ports:
       - 9200:9200
   kibana:
+    user: "${UID}:${GID}"
     image: docker.elastic.co/kibana/kibana:7.5.1
     ports:
       - "5601:5601"

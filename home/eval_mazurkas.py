@@ -4,6 +4,7 @@ import footprint.evaluators as evaluators
 from footprint.models import Audio
 from footprint.models import Project
 from footprint.features import ocmi
+from footprint.features import crema as cremalib
 
 import os
 import csv
@@ -48,6 +49,13 @@ def feat_chroma_cens(audio):
 def chroma_ocmi(audio):
   chroma = audio.features['chroma_cens']
   return ocmi.ocmi(chroma)
+
+def crema(audio):
+  return cremalib.process(audio)
+
+def crema_ocmi(audio):
+  crema = audio.features['crema']
+  return ocmi.ocmi(crema)
 
 def beat_chroma_ocmi(audio):
   chroma = audio.features['beat_chroma_cens']
@@ -104,17 +112,26 @@ p.process_feature('chroma_censx', feat_chroma_cens)
 #p.process_feature('chroma_cens_12', feat_chroma_cens)
 p.process_feature('beat_chroma_ocmi', beat_chroma_ocmi)
 p.process_feature('chroma_ocmi', chroma_ocmi)
-#p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('beat_chroma_cens', ocmi.ocmi_norm, reshape=(0, 4)))
+
+p.process_feature('crema', crema)
+p.process_feature('crema_ocmi_4b', proc_ocmi_feature('crema', ocmi.ocmi, reshape=(0, 4)))
+
+#p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('chroma_cens', ocmi.ocmi_norm, reshape=(0, 4)))
 p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_censx', ocmi.ocmi, reshape=(0, 4)))
 
-#p.use_tokenizer('magic1', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
 p.use_tokenizer('magic2', magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=2))
 p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=2))
-p.use_tokenizer('magic3', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=2))
+p.use_tokenizer('magic3', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=1))
 p.use_tokenizer('magic4', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2))
 
+p.use_tokenizer('magic5', magic_tokenizer('crema', min_hash_fns=20, shingle_size=1))
+p.use_tokenizer('magic7', magic_tokenizer('crema_ocmi_4b', min_hash_fns=20, shingle_size=1))
+
 connect_to_elasticsearch(p)
-p.client.set_scope('csi', ['magic4'], 'tokens_by_spaces')
+#p.client.set_scope('csi', ['magic3', 'magic4', 'magic5', 'magic7'], 'tokens_by_spaces')
+p.client.set_scope('csi', ['magic7'], 'tokens_by_spaces')
+
+#p.client.set_scope('csi', ['magic4', 'magic3'], 'tokens_by_spaces') -- best
 #p.add('/dataset/YTCdataset/letitbe/test.mp3')
 #import code; code.interact(local=dict(globals(), **locals()))
 
@@ -135,25 +152,31 @@ print(df2.sum())
 
 #      import code; code.interact(local=dict(globals(), **locals()))
 
+# p.use_tokenizer('magic2', magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=2))
+# p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=2))
+# p.use_tokenizer('magic3', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=1))
+# p.use_tokenizer('magic4', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2))
+# p.use_tokenizer('magic5', magic_tokenizer('crema', min_hash_fns=20, shingle_size=1))
+# p.use_tokenizer('magic7', magic_tokenizer('crema_ocmi_4b', min_hash_fns=20, shingle_size=1))
 
-#p.use_tokenizer('magic1', magic_tokenizer('chroma_censx', min_hash_fns=15, shingle_size=1))
+# p.client.set_scope('csi', ['magic3', 'magic4', 'magic5', 'magic7'], 'tokens_by_spaces')
 # ==== Results ===
-# Mean Average Precision (MAP)                 0.515218
-# Mean number of covers in top 10              5.736549
-# Mean rank of first correct cover (MRR)       2.129870
+# Mean Average Precision (MAP)                 0.680111
+# Mean number of covers in top 10              7.205937
+# Mean rank of first correct cover (MRR)       3.510204
 # Total candidates                           539.000000
 # Total cliques                               49.000000
-# Total covers in top 10                    3248.000000
+# Total covers in top 10                    4113.000000
 # Total queries                              539.000000
 # dtype: float64
 # ==== Total correct covers at rank positions ===
-# 1     459
-# 2     422
-# 3     420
-# 4     370
-# 5     366
-# 6     319
-# 7     286
-# 8     236
-# 9     214
-# 10    156
+# 1     488
+# 2     482
+# 3     469
+# 4     455
+# 5     443
+# 6     423
+# 7     408
+# 8     383
+# 9     333
+# 10    229
