@@ -12,6 +12,7 @@ import random
 import logging
 import numpy as np
 import librosa
+from sklearn.preprocessing import normalize
 
 
 def generate_clique_map(entries_path, filename):
@@ -49,6 +50,15 @@ def feat_chroma_cens(audio):
 def chroma_ocmi(audio):
   chroma = audio.features['chroma_cens']
   return ocmi.ocmi(chroma)
+
+def feat_mfcc(audio):
+  import code; code.interact(local=dict(globals(), **locals()))
+  mfcc = librosa.feature.mfcc(y=audio.y, sr=audio.sr)
+  return normalize(mfcc, axis=1, norm='max')
+
+def feat_mfcc_delta(audio):
+  mfcc = audio.features['mfcc']
+  return librosa.feature.delta(mfcc)
 
 def crema(audio):
   return cremalib.process(audio)
@@ -95,11 +105,12 @@ def initial_settings():
 
 
 
-entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
-queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+#entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+#queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+
 expect_path = abs_path('mazurkas/configs/mazurka_cliques.csv')
-#entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
-#queries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+queries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
 
 #queries_path = abs_path('fixtures/test/queries_small.txt')
 
@@ -118,18 +129,22 @@ p.process_feature('crema_ocmi_4b', proc_ocmi_feature('crema', ocmi.ocmi, reshape
 
 #p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('chroma_cens', ocmi.ocmi_norm, reshape=(0, 4)))
 p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_censx', ocmi.ocmi, reshape=(0, 4)))
+#p.process_feature('mfcc', feat_mfcc)
+#p.process_feature('mfcc_delta', feat_mfcc_delta)
 
 p.use_tokenizer('magic2', magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=2))
 p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=2))
 p.use_tokenizer('magic3', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=1))
 p.use_tokenizer('magic4', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2))
-
 p.use_tokenizer('magic5', magic_tokenizer('crema', min_hash_fns=20, shingle_size=1))
 p.use_tokenizer('magic7', magic_tokenizer('crema_ocmi_4b', min_hash_fns=20, shingle_size=1))
 
+#p.use_tokenizer('magic8', magic_tokenizer('mfcc', min_hash_fns=20, shingle_size=1))
+#p.use_tokenizer('magic9', magic_tokenizer('mfcc_delta', min_hash_fns=20, shingle_size=1))
+
 connect_to_elasticsearch(p)
-#p.client.set_scope('csi', ['magic3', 'magic4', 'magic5', 'magic7'], 'tokens_by_spaces')
-p.client.set_scope('csi', ['magic7'], 'tokens_by_spaces')
+p.client.set_scope('csi', ['magic3', 'magic4', 'magic5', 'magic7'], 'tokens_by_spaces')
+#p.client.set_scope('csi', ['magic7'], 'tokens_by_spaces')
 
 #p.client.set_scope('csi', ['magic4', 'magic3'], 'tokens_by_spaces') -- best
 #p.add('/dataset/YTCdataset/letitbe/test.mp3')
