@@ -1,7 +1,9 @@
 FROM ubuntu:16.04
 MAINTAINER "Arthur Tofani"
 
-RUN apt-get update && apt-get install -y wget ca-certificates \
+RUN apt-get update
+RUN apt-get install -y apt-utils
+RUN apt-get update apt-get install -y wget ca-certificates \
     build-essential wget cmake pkg-config \
     libgtk-3-dev \
     git curl vim nano python3-dev python3-pip \
@@ -10,7 +12,7 @@ RUN apt-get update && apt-get install -y wget ca-certificates \
 
 RUN apt-get install -y --no-install-recommends libedit-dev build-essential
 
-RUN apt-get install -y apt-utils
+
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y --no-install-recommends  llvm-8 llvm-8-dev
 

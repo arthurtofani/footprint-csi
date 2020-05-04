@@ -56,5 +56,5 @@ def beat_chroma_ocmi(audio):
 def beat_chroma_cens(audio):
   chroma = audio.features['chroma_cens']
   beats = audio.features['beats']
-  beat_f = librosa.util.fix_frames(audio.beats, x_max=chroma.shape[1])
+  beat_f = librosa.util.fix_frames(beats, x_max=chroma.shape[1])
   return librosa.util.sync(chroma, beat_f, aggregate=np.median)

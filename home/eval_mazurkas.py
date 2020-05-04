@@ -19,26 +19,35 @@ def abs_path(path):
     dirname = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(dirname, path)
 
-#entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
-#queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
 #generate_clique_map(entries_path, expect_path)
 
 
 expect_path = abs_path('mazurkas/configs/mazurka_cliques.csv')
-entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
-queries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+#entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+#queries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+
 max_processors = 3
 
 p = Project(cache_signal=True, cache_features=True, cache_folder='/cache')
 p.process_feature('beats', mazurkas.features.beats)
 p.process_feature('chroma_cens', mazurkas.features.chroma_cens)
 p.process_feature('chroma_ocmi', mazurkas.features.chroma_ocmi)
+p.process_feature('beat_chroma_cens', mazurkas.features.beat_chroma_cens)
+p.process_feature('beat_chroma_ocmi', mazurkas.features.beat_chroma_ocmi)
+p.process_feature('crema', mazurkas.features.crema)
+p.process_feature('crema_ocmi', mazurkas.features.crema_ocmi)
 
 p.tokenize('tk_chroma_cens', mazurkas.tokenizers.magic_tokenizer('chroma_cens', min_hash_fns=20, shingle_size=2))
 p.tokenize('tk_chroma_ocmi', mazurkas.tokenizers.magic_tokenizer('chroma_ocmi', min_hash_fns=20, shingle_size=1))
+p.tokenize('tk_crema', mazurkas.tokenizers.magic_tokenizer('crema', min_hash_fns=20, shingle_size=1))
+p.tokenize('tk_crema_ocmi', mazurkas.tokenizers.magic_tokenizer('crema_ocmi', min_hash_fns=20, shingle_size=1))
+p.tokenize('tk_beat_chroma_cens', mazurkas.tokenizers.magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=1))
+p.tokenize('tk_beat_chroma_ocmi', mazurkas.tokenizers.magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=1))
 
 mazurkas.db.connect_to_elasticsearch(p)
-p.client.set_scope('csi', ['tk_chroma_cens', 'tk_chroma_ocmi'], 'tokens_by_spaces')
+p.client.set_scope('csi', ['tk_chroma_cens', 'tk_chroma_ocmi', 'tk_crema', 'tk_crema_ocmi'], 'tokens_by_spaces')
 
 
 def preprocess_audio(filename):
