@@ -1,19 +1,10 @@
-import footprint.clients as db
-import footprint.tokenizers as tokenizers
 import footprint.evaluators as evaluators
-from footprint.models import Audio
 from footprint.models import Project
-from footprint.features import ocmi
-from footprint.features import crema as cremalib
-
+from multiprocessing import Pool
 import os
 import csv
 import random
-import logging
-import numpy as np
-import librosa
-from sklearn.preprocessing import normalize
-
+import mazurkas
 
 def generate_clique_map(entries_path, filename):
   f = open(entries_path, 'r', encoding='utf-8')
@@ -24,138 +15,46 @@ def generate_clique_map(entries_path, filename):
       writer.writerow([os.path.dirname(file), file])
   f.close()
 
-
 def abs_path(path):
     dirname = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(dirname, path)
 
-def magic_tokenizer(feature_name, min_hash_fns=10, shingle_size=3):
-  def tokenize_method(audio):
-    feature = audio.features[feature_name]
-    #proc_ocmi_feature ...
-    return tokenizers.magic_hash(feature, min_hash_fns=min_hash_fns, shingle_size=shingle_size)
-  return tokenize_method
-
-def proc_ocmi_feature(feature_name, method, reshape=(None, None)):
-  def feat_method(audio):
-    feature = audio.features[feature_name]
-    f2 = method(feature)
-    return tokenizers.reshape(f2, reshape[0], reshape[1])
-  return feat_method
-
-def feat_chroma_cens(audio):
-  print('running chroma for ', audio.filename)
-  return librosa.feature.chroma_cens(audio.y, audio.sr, hop_length=2**10)
-
-def chroma_ocmi(audio):
-  chroma = audio.features['chroma_cens']
-  return ocmi.ocmi(chroma)
-
-def feat_mfcc(audio):
-  import code; code.interact(local=dict(globals(), **locals()))
-  mfcc = librosa.feature.mfcc(y=audio.y, sr=audio.sr)
-  return normalize(mfcc, axis=1, norm='max')
-
-def feat_mfcc_delta(audio):
-  mfcc = audio.features['mfcc']
-  return librosa.feature.delta(mfcc)
-
-def crema(audio):
-  return cremalib.process(audio)
-
-def crema_ocmi(audio):
-  crema = audio.features['crema']
-  return ocmi.ocmi(crema)
-
-def beat_chroma_ocmi(audio):
-  chroma = audio.features['beat_chroma_cens']
-  return ocmi.ocmi(chroma)
-
-def beat_sync_chroma_cens(audio):
-  chroma =  librosa.feature.chroma_cens(audio.y, sr=audio.sr, hop_length=2**10)
-  audio.load_beats()
-  beat_f = librosa.util.fix_frames(audio.beats, x_max=chroma.shape[1])
-  return librosa.util.sync(chroma, beat_f, aggregate=np.median)
-
-def connect_to_elasticsearch(p):
-  cli = db.elasticsearch.Connection(host='elasticsearch', port=9200)
-  cli.clear_index('csi')
-  cli.setup_index('csi', initial_settings())
-  p.set_connection(cli)
-
-
-def initial_settings():
-  return {
-    "settings" : {
-      "analysis" : {
-        "analyzer" : {
-          "tokens_by_spaces": {
-            "tokenizer": "divide_tokens_by_spaces"
-          }
-        },
-        "tokenizer": {
-          "divide_tokens_by_spaces": {
-            "type": "simple_pattern_split",
-            "pattern": " "
-          }
-        }
-      }
-    }
-  }
-
-
-
 #entries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
 #queries_path = abs_path('mazurkas/configs/mazurka_49x11.txt')
+#generate_clique_map(entries_path, expect_path)
+
 
 expect_path = abs_path('mazurkas/configs/mazurka_cliques.csv')
 entries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
 queries_path = abs_path('mazurkas/configs/mazurka_test_entries.txt')
+max_processors = 3
 
-#queries_path = abs_path('fixtures/test/queries_small.txt')
+p = Project(cache_signal=True, cache_features=True, cache_folder='/cache')
+p.process_feature('beats', mazurkas.features.beats)
+p.process_feature('chroma_cens', mazurkas.features.chroma_cens)
+p.process_feature('chroma_ocmi', mazurkas.features.chroma_ocmi)
 
-#generate_clique_map(entries_path, expect_path)
-#read_clique_map(filename)
+p.tokenize('tk_chroma_cens', mazurkas.tokenizers.magic_tokenizer('chroma_cens', min_hash_fns=20, shingle_size=2))
+p.tokenize('tk_chroma_ocmi', mazurkas.tokenizers.magic_tokenizer('chroma_ocmi', min_hash_fns=20, shingle_size=1))
 
-p = Project(cache=True, cache_folder='/cache')
-p.process_feature('beat_chroma_cens', beat_sync_chroma_cens)
-p.process_feature('chroma_censx', feat_chroma_cens)
-#p.process_feature('chroma_cens_12', feat_chroma_cens)
-p.process_feature('beat_chroma_ocmi', beat_chroma_ocmi)
-p.process_feature('chroma_ocmi', chroma_ocmi)
+mazurkas.db.connect_to_elasticsearch(p)
+p.client.set_scope('csi', ['tk_chroma_cens', 'tk_chroma_ocmi'], 'tokens_by_spaces')
 
-p.process_feature('crema', crema)
-p.process_feature('crema_ocmi_4b', proc_ocmi_feature('crema', ocmi.ocmi, reshape=(0, 4)))
 
-#p.process_feature('bchroma_ocmi_norm_4', proc_ocmi_feature('chroma_cens', ocmi.ocmi_norm, reshape=(0, 4)))
-p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_censx', ocmi.ocmi, reshape=(0, 4)))
-#p.process_feature('mfcc', feat_mfcc)
-#p.process_feature('mfcc_delta', feat_mfcc_delta)
-
-p.use_tokenizer('magic2', magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=2))
-p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=2))
-p.use_tokenizer('magic3', magic_tokenizer('chroma_ocmi_4b', min_hash_fns=20, shingle_size=1))
-p.use_tokenizer('magic4', magic_tokenizer('chroma_censx', min_hash_fns=20, shingle_size=2))
-p.use_tokenizer('magic5', magic_tokenizer('crema', min_hash_fns=20, shingle_size=1))
-p.use_tokenizer('magic7', magic_tokenizer('crema_ocmi_4b', min_hash_fns=20, shingle_size=1))
-
-#p.use_tokenizer('magic8', magic_tokenizer('mfcc', min_hash_fns=20, shingle_size=1))
-#p.use_tokenizer('magic9', magic_tokenizer('mfcc_delta', min_hash_fns=20, shingle_size=1))
-
-connect_to_elasticsearch(p)
-p.client.set_scope('csi', ['magic3', 'magic4', 'magic5', 'magic7'], 'tokens_by_spaces')
-#p.client.set_scope('csi', ['magic7'], 'tokens_by_spaces')
-
-#p.client.set_scope('csi', ['magic4', 'magic3'], 'tokens_by_spaces') -- best
-#p.add('/dataset/YTCdataset/letitbe/test.mp3')
-#import code; code.interact(local=dict(globals(), **locals()))
+def preprocess_audio(filename):
+  p.load_audio(filename)
 
 evaluator = evaluators.CSI(p)
+
+for total_files in evaluator.preprocess(entries_path):
+  with Pool(max_processors) as pool:
+    pool.map(preprocess_audio , total_files)
+
 print('building')
 evaluator.build(entries_path)
+
 print('matching')
 evaluator.match(queries_path)
-
 
 print("\n\n\n==== Results ===")
 df1, df2 = evaluator.evaluate(expect_path, 'mazurkas/out.txt')
@@ -195,3 +94,22 @@ print(df2.sum())
 # 8     383
 # 9     333
 # 10    229
+
+##p.process_feature('beat_chroma_cens', beat_sync_chroma_cens)
+##p.process_feature('beat_chroma_ocmi', beat_chroma_ocmi)
+##p.process_feature('chroma_ocmi_4b', proc_ocmi_feature('chroma_censx', ocmi.ocmi, reshape=(0, 4)))
+##p.process_feature('crema', crema)
+##p.process_feature('crema_ocmi_4b', proc_ocmi_feature('crema', ocmi.ocmi, reshape=(0, 4)))
+#p.process_feature('mfcc', feat_mfcc)
+#p.process_feature('mfcc_delta', feat_mfcc_delta)
+
+##p.use_tokenizer('magic2', magic_tokenizer('beat_chroma_ocmi', min_hash_fns=20, shingle_size=2))
+##p.use_tokenizer('magic1', magic_tokenizer('beat_chroma_cens', min_hash_fns=20, shingle_size=2))
+##p.use_tokenizer('magic5', magic_tokenizer('crema', min_hash_fns=20, shingle_size=1))
+##p.use_tokenizer('magic7', magic_tokenizer('crema_ocmi_4b', min_hash_fns=20, shingle_size=1))
+#p.use_tokenizer('magic8', magic_tokenizer('mfcc', min_hash_fns=20, shingle_size=1))
+#p.use_tokenizer('magic9', magic_tokenizer('mfcc_delta', min_hash_fns=20, shingle_size=1))
+
+#p.client.set_scope('csi', ['magic4', 'magic3'], 'tokens_by_spaces') -- best
+#p.add('/dataset/YTCdataset/letitbe/test.mp3')
+#import code; code.interact(local=dict(globals(), **locals()))
