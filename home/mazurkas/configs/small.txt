@@ -1,0 +1,15 @@
+/dataset/mazurkas/mazurka17-2/pid9074f-11.mp3
+/dataset/mazurkas/mazurka17-2/pid9198g-11.mp3
+/dataset/mazurkas/mazurka17-2/pid9192-11.mp3
+/dataset/mazurkas/mazurka24-4/pid9056-13.mp3
+/dataset/mazurkas/mazurka24-4/pid6100021-12.mp3
+/dataset/mazurkas/mazurka24-4/pid918722-06.mp3
+/dataset/mazurkas/mazurka07-2/pid9062-06.mp3
+/dataset/mazurkas/mazurka07-2/pid9061-06.mp3
+/dataset/mazurkas/mazurka07-2/pid9064-05.mp3
+/dataset/mazurkas/mazurka07-1/pid610004-05.mp3
+/dataset/mazurkas/mazurka07-1/pid9098-05.mp3
+/dataset/mazurkas/mazurka07-1/pid9074f-05.mp3
+/dataset/mazurkas/mazurka67-1/pid9099b-19.mp3
+/dataset/mazurkas/mazurka67-1/pid9062b-16.mp3
+/dataset/mazurkas/mazurka67-1/pid9184-14.mp3

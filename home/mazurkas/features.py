@@ -1,9 +1,26 @@
 import footprint.tokenizers as tokenizers
 from footprint.features import ocmi
-from footprint.features import crema as cremalib
+#from footprint.features import crema as cremalib
 import numpy as np
 import librosa
 from sklearn.preprocessing import normalize
+from . import simplefast
+
+def matrix_profile(feature_name, multipl):
+  def get_matrix_profile(audio):
+    feature = audio.features[feature_name]
+    y, sr = audio.signal()
+    tempo, beats = librosa.beat.beat_track(y=y, sr=sr, trim=False)
+    seconds = len(y)/sr
+    samples_per_beat = (60 * sr) / tempo
+    feature_len = len(feature.T)
+    feature_samples_per_beat = samples_per_beat * (feature_len/len(y))
+    m = multipl
+    sz = int(m * feature_samples_per_beat)
+    sz = min(sz, feature_len/16)
+    mp = simplefast.simpleself(feature, sz)[0]
+    return mp
+  return get_matrix_profile
 
 def proc_ocmi_feature(feature_name, method, reshape=(None, None)):
   def feat_method(audio):
